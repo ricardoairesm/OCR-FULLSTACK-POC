@@ -11,11 +11,15 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
-    "@repo/ui": "workspace:*",
-    "@repo/types": "workspace:*",
+    "@repo/ui": "*",
     "next": "^15.5.0",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.0",
+    "@mantine/core": "4.2.12",
+    "@mantine/dropzone": "^4.2.12",
+    "@mantine/hooks": "4.2.12",
+    "@mantine/next": "4.2.12",
+    "tesseract.js": "^6.0.1"
   },
   "devDependencies": {
     "@repo/eslint-config": "*",
