@@ -15,13 +15,20 @@ datasource db {
 }
 
 model User {
-  id Int @id @default(autoincrement())
-  email String  @unique
-  name  String?
-  password String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt @default(now())
-  image Image[]
+  id            String    @id 
+  name          String
+  email         String
+  emailVerified Boolean
+  image         String?
+  createdAt     DateTime
+  updatedAt     DateTime
+  sessions      Session[]
+  accounts      Account[]
+  images Image[]
+
+  @@unique([email])
+  @@map("user")
+
 }
 
 model Image {
@@ -29,7 +36,7 @@ model Image {
   content String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt @default(now())
-  userId  Int
+  userId  String
   user  User @relation(fields: [userId], references: [id])
   prompts Prompts[]
 }
@@ -41,4 +48,49 @@ model Prompts {
   published Boolean @default(false)
   imageId Int
   image Image @relation(fields: [imageId], references: [id])
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime
+  updatedAt DateTime
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime
+  updatedAt             DateTime
+
+  @@map("account")
+}
+
+model Verification {
+  id         String    @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime?
+  updatedAt  DateTime?
+
+  @@map("verification")
 }
