@@ -34,6 +34,8 @@ model User {
 model Image {
   id Int @id @default(autoincrement())
   content String
+  name String
+  src String @default("image")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt @default(now())
   userId  String

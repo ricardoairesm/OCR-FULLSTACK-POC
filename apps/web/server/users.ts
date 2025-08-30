@@ -1,8 +1,7 @@
 "use server";
-
 import { auth } from "../lib/auth";
 
-export const signIn = async (email: string, password: string) => {
+export const userSignIn = async (email: string, password: string) => {
     try {
         await auth.api.signInEmail({
             body: {
@@ -18,12 +17,12 @@ export const signIn = async (email: string, password: string) => {
         const e = error as Error;
         return {
             success: false,
-            message: e.message || "Error signing in user" 
+            message: e.message || "Error signing in user"
         }
     }
 }
 
-export const signUp = async (name: string, email: string, password: string) => {
+export const userSignUp = async (name: string, email: string, password: string) => {
     try {
         await auth.api.signUpEmail({
             body: {
@@ -40,7 +39,7 @@ export const signUp = async (name: string, email: string, password: string) => {
         const e = error as Error;
         return {
             success: false,
-            message: e.message || "Error creating user" 
+            message: e.message || "Error creating user"
         }
     }
 
