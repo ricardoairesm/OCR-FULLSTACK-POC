@@ -23,7 +23,7 @@
 
 ## Description
 
-[Nest](https://github.com/nestjs/nest) To run the project locally do the following commands:
+To run the project locally do the following commands:
 
 ## Project setup
 
