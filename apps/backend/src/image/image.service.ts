@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma, PrismaClient, User } from '@prisma/client';
-import { ImageUploadDTO } from '@repo/types';
+import type { ImageUploadDTO, ImageUploadResponse } from 'src/types/images';
 import { DatabaseService } from 'src/database/database.service';
 import Tesseract from 'tesseract.js';
 
 @Injectable()
 export class ImageService {
-  constructor(private readonly databaseService: DatabaseService) {}
+  constructor(private readonly databaseService: DatabaseService) { }
   create(createImageDto: Prisma.ImageCreateInput) {
     return 'This action adds a new image';
   }
@@ -15,8 +15,12 @@ export class ImageService {
     return `This action returns all image`;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} image`;
+  findOne(id: string) {
+    return this.databaseService.image.findMany({ where: { userId: id }, include: { prompts: true } })
+  }
+
+  findOneByName(name: string, userId: string) {
+    return this.databaseService.image.findFirst({ where: { name, userId } })
   }
 
   update(id: number, updateImageDto: Prisma.ImageUpdateInput) {
@@ -27,8 +31,7 @@ export class ImageService {
     return `This action removes a #${id} image`;
   }
 
-  async uploadUserFile(createImageDto: ImageUploadDTO): Promise<string> {
-    const response = await Tesseract.recognize(createImageDto.content!, 'eng');
+  async uploadUserFile(createImageDto: ImageUploadDTO): Promise<ImageUploadResponse> {
     const user: User | null = await this.databaseService.user.findUnique({
       where: { id: createImageDto.userId },
     });
@@ -36,18 +39,18 @@ export class ImageService {
     if (!user) {
       throw new Error('User not found');
     }
-    try{
+    try {
       const newImage: Prisma.ImageCreateInput = {
         name: createImageDto.fileName,
         user: { connect: { id: createImageDto.userId } },
-        content: response.data.text,
-        src: createImageDto.content!,
+        content: createImageDto.content,
+        src: "",
       };
-      await this.databaseService.image.create({ data: newImage });
-    } catch(error){
+      const createdImage = await this.databaseService.image.create({ data: newImage });
+      return { extractedText: "", imageId: createdImage.id };
+    } catch (error) {
       console.error('Error creating image record:', error);
       throw error;
     }
-    return response.data.text;
   }
 }

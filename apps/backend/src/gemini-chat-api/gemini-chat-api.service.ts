@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { AIMessage, BaseMessage, HumanMessage, SystemMessage } from '@langchain/core/messages';
-import { GeminiRequest, GeminiResponse } from '@repo/types';
+import type { GeminiRequest, GeminiMessage } from 'src/types/gemineMessage';
+import { DatabaseService } from 'src/database/database.service';
+import { Prisma } from '@prisma/client';
+
 
 const DEFAULT_SYSTEM_MESSAGE = `
 You are an AI assistant for an OCR text extraction application. Here are the key features included in the application:
@@ -20,7 +23,7 @@ You are an AI assistant for an OCR text extraction application. Here are the key
 
 class GeminiChatHistory {
     readonly chatHistory: BaseMessage[];
-    constructor(systemMessage? : string) {
+    constructor(systemMessage?: string) {
         this.chatHistory = [];
         if (systemMessage) {
             this.addSystemMessage(systemMessage);
@@ -42,24 +45,37 @@ class GeminiChatHistory {
 
 
 @Injectable()
-export class OpenaiChatApiService {
+export class GeminiChatApiService {
     private readonly chatHistory: GeminiChatHistory;
     private readonly chat: ChatGoogleGenerativeAI
-
+    private readonly databaseService: DatabaseService;
     constructor() {
+        this.databaseService = new DatabaseService();
         this.chatHistory = new GeminiChatHistory(DEFAULT_SYSTEM_MESSAGE);
         this.chat = new ChatGoogleGenerativeAI({
-            temperature: 0,
+            temperature: 0.7,
             model: process.env.GEMINI_API_DEFAULT_MODEL!
         });
     }
 
-    async getAiModelAnswer(userMessage: GeminiRequest): Promise<GeminiResponse> {
+    async getAiModelAnswer(userMessage: GeminiRequest): Promise<GeminiMessage> {
         this.chatHistory.addHumanMessage(userMessage.message);
         const result = await this.chat.invoke(this.chatHistory.chatHistory);
         const aiMessage = result.text;
         this.chatHistory.addAiMessage(aiMessage);
-        const response: GeminiResponse = { aiMessage: aiMessage };
+        try {
+            const newPrompt: Prisma.PromptsCreateInput = {
+                question: userMessage.message,
+                geminiAnswer: aiMessage,
+                image: { connect: { id: userMessage.imageId } },
+                published: true,
+            };
+            await this.databaseService.prompts.create({ data: newPrompt });
+        } catch (error) {
+            console.error('Error creating prompt record:', error);
+            throw error;
+        }
+        const response: GeminiMessage = { message: aiMessage, role: 'gemini' };
         return response;
     }
 }

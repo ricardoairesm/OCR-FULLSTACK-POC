@@ -1,11 +1,12 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { ImageService } from './image.service';
 import { Prisma } from '@prisma/client';
-import type { ImageUploadDTO } from '@repo/types';
+import type { ImageUploadDTO, ImageUploadResponse } from 'src/types/images';
+
 
 @Controller('image')
 export class ImageController {
-  constructor(private readonly imageService: ImageService) {}
+  constructor(private readonly imageService: ImageService) { }
 
   @Get()
   findAll() {
@@ -14,11 +15,11 @@ export class ImageController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.imageService.findOne(+id);
+    return this.imageService.findOne(id);
   }
 
   @Post()
-  uploadUserFile(@Body() createImageDto: ImageUploadDTO): Promise<string> {
+  uploadUserFile(@Body() createImageDto: ImageUploadDTO): Promise<ImageUploadResponse> {
     return this.imageService.uploadUserFile(createImageDto);
   }
 
